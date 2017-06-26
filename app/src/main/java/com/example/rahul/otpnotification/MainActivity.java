@@ -1,11 +1,18 @@
 package com.example.rahul.otpnotification;
 
 import android.Manifest;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.NotificationCompat;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,9 +44,40 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void MessageReceived(String messageText) {
                 Toast.makeText(MainActivity.this, messageText , Toast.LENGTH_LONG).show();
+                CreateNotification();
+
+
             }
         });
 
+
+
+    }
+
+    //The function creates a notification
+    public void CreateNotification( ){
+        RemoteViews contentView = new RemoteViews(getPackageName() , R.layout.notication_content);
+
+        NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setContent(contentView)
+                .setContentTitle("something")
+                ;
+
+
+        Intent result = new Intent(this , MainActivity.class);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(result);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0 , PendingIntent.FLAG_UPDATE_CURRENT);
+
+        mBuilder.setContentIntent( resultPendingIntent );
+
+        NotificationManager notificationManager = (NotificationManager)getSystemService( Context.NOTIFICATION_SERVICE );
+
+        int mid = 1;
+        notificationManager.notify( mid, mBuilder.build() );
 
 
     }
