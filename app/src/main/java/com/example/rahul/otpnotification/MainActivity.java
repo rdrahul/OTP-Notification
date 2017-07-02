@@ -14,13 +14,32 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.NotificationCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
+
+    private DatabaseReference database;
+    private Message message;
+    private String TAG = "OTPMainActivity";
+    private MessageAdapter messageAdapter;
+    private RecyclerView recyclerView;
+    private ArrayList<Message> allMessages ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,26 +47,50 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //adding permission at runtime
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECEIVE_SMS)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
                 != PackageManager.PERMISSION_GRANTED) {
 
-
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECEIVE_SMS},
-                        0);
-
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, 0);
         }
 
+        //get our firebase database object instance;
+        database = FirebaseDatabase.getInstance().getReference();
+        message = null;
 
+        //recyclerView
+        recyclerView = (RecyclerView) findViewById(R.id.rv_messages);
+
+        //initializing our dataReference
+        allMessages = new ArrayList<Message>();
+
+        //set the layout manager
+        LinearLayoutManager manager = new LinearLayoutManager(this );
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setHasFixedSize(true);
+
+        //set the adapter
+        messageAdapter = new MessageAdapter(allMessages);
+        recyclerView.setAdapter(messageAdapter);
+
+
+        RetrieveDataFromFirebase();
+
+        /**
+         * BindListener listens to the received messages and do what is necessary
+         */
         SmsReceiver.BindListener(new SmsListener() {
+
             @Override
-            public void MessageReceived(String messageText) {
+            public void MessageReceived(String messageText,  String messageSender) {
 
                 //if the incoming message contains the otp display it
                 String otp = GetIfContainsOTP( messageText );
 
                 if ( otp != "" ){
+
+                    //save the message and otp to a firebase realtime database
+                    SaveToFirebase( messageText, messageSender, otp);
+
                     //create the notification
                     String spacedOtp = "";
                     for ( int i=0;i<otp.length() ; i++ ){
@@ -56,9 +99,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     CreateNotification( spacedOtp );
                 }
-
-
-
             }
         });
     }
@@ -126,5 +166,40 @@ public class MainActivity extends AppCompatActivity {
         notificationManager.notify( mid, mBuilder.build() );
 
 
+    }
+
+    private void SaveToFirebase(String messageBody ,String messageSender, String otp){
+
+        //create the message oject and save to firebase
+        message = new Message();
+        message.setUid(database.child("OTP").push().getKey());
+        message.setMessage(messageBody);
+        message.setOtp(otp);
+        message.setSender(messageSender);
+        database.child("OTP").child(message.getUid()).setValue(message);
+
+    }
+
+    private void RetrieveDataFromFirebase(){
+        database.child("OTP").addValueEventListener(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                allMessages.clear();
+                for (DataSnapshot messageDataSnapshot : dataSnapshot.getChildren()) {
+                    Message message = messageDataSnapshot.getValue(Message.class);
+                    allMessages.add(message);
+                    Log.d(TAG, "onDataChange: " + message.getOtp());
+                }
+                Collections.reverse(allMessages);
+                messageAdapter.dataChanged(allMessages);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+        });
     }
 }

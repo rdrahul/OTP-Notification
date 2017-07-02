@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "205023557415",
+    "firebase_url": "https://otp-notification.firebaseio.com",
+    "project_id": "otp-notification",
+    "storage_bucket": "otp-notification.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:205023557415:android:42c2dbb5de528781",
+        "android_client_info": {
+          "package_name": "com.example.rahul.otpnotification"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "205023557415-skvk0agiakhed05ofalfuc6v8bf6uepi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfqCUY0-0EiKRLW_nGtEpNjSLYRujPGgw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

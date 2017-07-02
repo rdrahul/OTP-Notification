@@ -45,7 +45,7 @@ public class SmsReceiver extends BroadcastReceiver {
             String messageBody = smsMessage.getMessageBody();
 
             //Pass on the text to our listener.
-            mListener.MessageReceived(messageBody);
+            mListener.MessageReceived(messageBody , sender);
 
         }
 
